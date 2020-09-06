@@ -1,0 +1,156 @@
+Sub stockmarket()
+'create a workshseet dimension
+Dim ws As Worksheet
+Dim starting_ws As Worksheet
+Set starting_ws = ActiveSheet
+' Create ticker dimensions and set values for counters
+Dim Ticker_Name As String
+Dim ticker_name_count As Long
+Dim ticker_count As Double
+ticker_count = 1
+Dim ticker_set As Long
+'create and set dimension for last row on the worksheet
+Dim lastrow As Double
+lastrow = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row
+' create and set dimensions for ticker volume and counter
+Dim Ticker_Vol As Double
+Ticker_Vol = 0
+Dim TickerVolTotal As Double
+'create and set open amount and row counter dimensions
+Dim Open_Amount As Double
+Dim Open_row_no As Long
+' create dimension for summary tab row and set location
+Dim SumTabRow As Long
+Dim increase_row As Long
+Dim decrease_row As Long
+Dim greatvol_row As Double
+SumTabRow = 2
+increase_row = 1
+decrease_row = 1
+greatvol_row = 1
+' create and set dimensions for main summary table last row
+Dim lastrow_summary_table As Long
+lastrow_summary_table = ActiveSheet.Cells(Rows.Count, 9).End(xlUp).Row
+'create dimensions for second summary table
+Dim Greatest_Increase As Double
+Dim Greatest_Decrease As Double
+Dim greatest_vol As Double
+Dim increase As Double
+Dim decrease As Double
+Dim GreatVol As Double
+'----------------------------------------------------------
+
+'add for each loop so code will run on all worksheets
+For Each ws In Worksheets
+   'add ticker summary table headers
+    ws.Cells(1, 9).Value = "Ticker"
+    ws.Cells(1, 9).Font.Bold = True
+    ws.Cells(1, 10).Value = "Yearly Change"
+    ws.Cells(1, 10).Font.Bold = True
+    ws.Cells(1, 11).Value = "Percentage Change"
+    ws.Cells(1, 11).Font.Bold = True
+    ws.Cells(1, 12).Value = "Total Volume"
+    ws.Cells(1, 12).Font.Bold = True
+    ws.Columns("I:L").AutoFit
+    'add second summary table descriptors
+    ws.Cells(1, 15).Value = "Ticker"
+    ws.Cells(1, 15).Font.Bold = True
+    ws.Cells(1, 16).Value = "Values"
+    ws.Cells(1, 16).Font.Bold = True
+    ws.Cells(2, 14).Value = "Greatest % Increase"
+    ws.Cells(2, 14).Font.Bold = True
+    ws.Cells(3, 14).Value = "Greatest % Decrease"
+    ws.Cells(3, 14).Font.Bold = True
+    ws.Cells(4, 14).Value = "Greatest Vol Increase"
+    ws.Cells(4, 14).Font.Bold = True
+    ws.Columns("N:P").AutoFit
+  'if statement to see if the ticker name of next row is same as current row
+            For i = 2 To lastrow
+                If ws.Cells(i, 1) = ws.Cells(i + 1, 1) Then
+                ticker_name_count = ticker_name_count + 1
+                ticker_count = ticker_count + 1
+                Ticker_Vol = Ticker_Vol + ws.Cells(i, 7).Value
+                TickerVolTotal = Ticker_Vol
+                ticker_set = ticker_name_count
+                'when the ticker name changes on the next row
+                    Else
+                ticker_name_count = 0
+                Ticker_Vol = 0
+                'get ticker name and write it into the summary tab
+                Ticker_Name = ws.Cells(i, 1)
+                ws.Range("I" & SumTabRow).Value = Ticker_Name
+                'add ticker volume to ticker_vol and write to summary tab
+                TickerVolTotal = TickerVolTotal + ws.Cells(i, 7).Value
+                ws.Range("L" & SumTabRow).Value = TickerVolTotal
+                'add to total row ticker_count
+                ticker_count = ticker_count + 1
+                'get open amount using ticker set and ticker counter
+                Openrow = ticker_count - ticker_set
+                Open_Amount = ws.Cells(Openrow, 3).Value
+                'get close amount value
+                close_amount = ws.Cells(i, 6).Value
+                'calculate the year change amount and write it to the summary table
+                year_change = close_amount - Open_Amount
+                ws.Range("J" & SumTabRow).Value = year_change
+                'calculate the percentage change and write it to the summary table
+                percentage_change = year_change / Open_Amount
+                ws.Range("K" & SumTabRow).Value = percentage_change
+                'fomat percentage change column in summary to rounded percentage
+                ws.Range("K" & SumTabRow).NumberFormat = "0.00%"
+                'add next row to sum tab, reset ticker vol
+                SumTabRow = SumTabRow + 1
+            End If
+             'get greatest dimensions and write to second summary table
+             increase = Application.WorksheetFunction.Max(ws.Range("K:K"))
+             decrease = Application.WorksheetFunction.Min(ws.Range("K:K"))
+             GreatVol = Application.WorksheetFunction.Max(ws.Range("L:L"))
+             ws.Cells(2, 16).Value = increase
+             ws.Cells(2, 16).NumberFormat = "0.00%"
+             ws.Cells(3, 16).Value = decrease
+             ws.Cells(3, 16).NumberFormat = "0.00%"
+             ws.Cells(4, 16).Value = GreatVol
+             'write ticker name for increase percentage
+            If ws.Cells(i, 11) <> increase Then
+                increase_row = increase_row + 1
+                    ElseIf ws.Cells(i, 11) = increase Then
+                increase_row = increase_row + 1
+                ws.Cells(2, 15) = ws.Cells(increase_row, 9).Value
+                increase_row = 1
+            End If
+            'write ticker name for decrease percentage
+            If ws.Cells(i, 11) <> decrease Then
+                decrease_row = decrease_row + 1
+                    ElseIf ws.Cells(i, 11) = decrease Then
+                decrease_row = decrease_row + 1
+                ws.Cells(3, 15) = ws.Cells(decrease_row, 9).Value
+                decrease_row = 1
+            End If
+            'write ticker name for greatest vol
+            If ws.Cells(i, 12) <> GreatVol Then
+                greatvol_row = greatvol_row + 1
+                    ElseIf ws.Cells(i, 12) = GreatVol Then
+                greatvol_row = greatvol_row + 1
+                ws.Cells(4, 15) = ws.Cells(greatvol_row, 9).Value
+                greatvol_row = 1
+            End If
+                'create another for loop for main summary table
+                For j = 2 To lastrow_summary_table
+                'add condition for colours to +ive and -ive change
+                    If ws.Cells(j, 10).Value >= 0 Then
+                    ws.Cells(j, 10).Interior.ColorIndex = 4
+                        'Else
+                    ws.Cells(j, 10).Interior.ColorIndex = 3
+                End If
+            Next j
+        Next i
+        'reset counters
+        ticker_name_count = 0
+        ticker_count = 1
+        Ticker_Vol = 0
+        TickerVolTotal = 0
+        SumTabRow = 2
+        increase_row = 1
+        decrease_row = 1
+        greatvol_row = 1
+    Next ws
+End Sub
